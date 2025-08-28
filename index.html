@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EdQuiz - Learning Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5283e5',
+                        secondary: '#579e58',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .modal {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .otp-input {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <img src="https://firebasestorage.googleapis.com/v0/b/widecanvas-d0dd4.appspot.com/o/logos%2F20250828_2304_EdQuiz%20Logo%20Design_simple_compose_01k3rvvhwffejb5cxnjywj8ncs.png?alt=media&token=10652a91-74e2-4bfb-b1db-705b75b068e2" alt="EdQuiz Logo" class="h-8">
+                </div>
+                <div class="flex items-center">
+                    <button id="loginBtn" class="bg-primary text-white px-6 py-2 rounded-full hover:bg-primary/90 transition-colors">Login</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content (Initially Hidden) -->
+    <div id="dashboardContent" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                <i class="bi bi-person-circle text-4xl text-primary"></i>
+                <h3 class="text-xl font-semibold mt-4">Profile</h3>
+                <p class="text-gray-600 mt-2">View and edit your profile settings</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                <i class="bi bi-question-circle text-4xl text-primary"></i>
+                <h3 class="text-xl font-semibold mt-4">Quizzes</h3>
+                <p class="text-gray-600 mt-2">Take and manage your quizzes</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                <i class="bi bi-trophy text-4xl text-primary"></i>
+                <h3 class="text-xl font-semibold mt-4">Leaderboard</h3>
+                <p class="text-gray-600 mt-2">Check your ranking and achievements</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Login</h2>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div id="phoneNumberStep">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="phone">
+                        Phone Number
+                    </label>
+                    <input type="tel" id="phone" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter your phone number">
+                </div>
+                <button id="generateOTP" class="w-full bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hover:bg-primary/90 transition-colors">
+                    Generate OTP
+                </button>
+            </div>
+            <div id="otpStep" class="hidden">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Enter OTP
+                    </label>
+                    <div class="flex justify-center space-x-2">
+                        <input type="text" maxlength="1" class="otp-input border rounded shadow" data-index="1">
+                        <input type="text" maxlength="1" class="otp-input border rounded shadow" data-index="2">
+                        <input type="text" maxlength="1" class="otp-input border rounded shadow" data-index="3">
+                        <input type="text" maxlength="1" class="otp-input border rounded shadow" data-index="4">
+                    </div>
+                </div>
+                <button id="verifyOTP" class="w-full bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hover:bg-primary/90 transition-colors">
+                    Verify OTP
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Modal Control
+        const loginBtn = document.getElementById('loginBtn');
+        const loginModal = document.getElementById('loginModal');
+        const closeModal = document.getElementById('closeModal');
+        const phoneNumberStep = document.getElementById('phoneNumberStep');
+        const otpStep = document.getElementById('otpStep');
+        const generateOTPBtn = document.getElementById('generateOTP');
+        const verifyOTPBtn = document.getElementById('verifyOTP');
+        const dashboardContent = document.getElementById('dashboardContent');
+
+        loginBtn.addEventListener('click', () => {
+            loginModal.classList.remove('hidden');
+        });
+
+        closeModal.addEventListener('click', () => {
+            loginModal.classList.add('hidden');
+            phoneNumberStep.classList.remove('hidden');
+            otpStep.classList.add('hidden');
+        });
+
+        // OTP Input Handling
+        const otpInputs = document.querySelectorAll('.otp-input');
+        otpInputs.forEach(input => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1) {
+                    const nextIndex = parseInt(e.target.dataset.index) + 1;
+                    if (nextIndex <= otpInputs.length) {
+                        otpInputs[nextIndex - 1].focus();
+                    }
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value) {
+                    const prevIndex = parseInt(e.target.dataset.index) - 1;
+                    if (prevIndex > 0) {
+                        otpInputs[prevIndex - 1].focus();
+                    }
+                }
+            });
+        });
+
+        // Generate OTP
+        generateOTPBtn.addEventListener('click', async () => {
+            const phone = document.getElementById('phone').value;
+            if (!phone) {
+                alert('Please enter a valid phone number');
+                return;
+            }
+
+            try {
+                // Here you would typically make an API call to generate OTP
+                // For demo, we'll just show the OTP step
+                phoneNumberStep.classList.add('hidden');
+                otpStep.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error generating OTP:', error);
+                alert('Error generating OTP. Please try again.');
+            }
+        });
+
+        // Verify OTP
+        verifyOTPBtn.addEventListener('click', async () => {
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+            if (otp.length !== 4) {
+                alert('Please enter a valid OTP');
+                return;
+            }
+
+            try {
+                // Here you would typically make an API call to verify OTP
+                // For demo, we'll just show the dashboard
+                loginModal.classList.add('hidden');
+                dashboardContent.classList.remove('hidden');
+                loginBtn.classList.add('hidden');
+            } catch (error) {
+                console.error('Error verifying OTP:', error);
+                alert('Error verifying OTP. Please try again.');
+            }
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
